@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreeAutoClip - 自动化视频剪辑</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 0;
+            color: white;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-panel {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 60px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+        
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            font-size: 1.3em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .upload-hint {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        #file-input {
+            display: none;
+        }
+        
+        .video-preview {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .video-preview.active {
+            display: block;
+        }
+        
+        .video-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .video-info h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .info-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .controls {
+            margin-top: 30px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .option-btn {
+            padding: 15px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        
+        .option-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+        }
+        
+        .option-btn.active {
+            border-color: #667eea;
+            background: #f0f2ff;
+            color: #667eea;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        
+        .checkbox-item:hover {
+            background: #f0f2ff;
+        }
+        
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .progress-panel {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            display: none;
+        }
+        
+        .progress-panel.active {
+            display: block;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .segments-panel {
+            margin-top: 30px;
+            display: none;
+        }
+        
+        .segments-panel.active {
+            display: block;
+        }
+        
+        .segments-list {
+            display: grid;
+            gap: 10px;
+        }
+        
+        .segment-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #667eea;
+        }
+        
+        .segment-info {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .segment-type {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .segment-type.highlight {
+            background: #ffd700;
+            color: #333;
+        }
+        
+        .segment-type.normal {
+            background: #667eea;
+            color: white;
+        }
+        
+        .segment-type.silence {
+            background: #999;
+            color: white;
+        }
+        
+        .download-panel {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+            display: none;
+        }
+        
+        .download-panel.active {
+            display: block;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s;
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: white;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .main-panel {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 40px 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 FreeAutoClip</h1>
+            <p>智能自动化视频剪辑工具 - 切片、转场、特效、合成、花字，一键完成</p>
+        </header>
+        
+        <div class="main-panel">
+            <!-- 上传区域 -->
+            <div class="upload-area" id="upload-area">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击或拖拽上传视频</div>
+                <div class="upload-hint">支持 MP4, MOV, AVI, MKV 格式，最大 1GB</div>
+                <input type="file" id="file-input" accept="video/*">
+            </div>
+            
+            <!-- 视频预览 -->
+            <div class="video-preview" id="video-preview">
+                <div class="video-info">
+                    <h3>📹 视频信息</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">文件名</div>
+                            <div class="info-value" id="video-filename">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">时长</div>
+                            <div class="info-value" id="video-duration">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">分辨率</div>
+                            <div class="info-value" id="video-resolution">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">帧率</div>
+                            <div class="info-value" id="video-fps">-</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 控制选项 -->
+                <div class="controls">
+                    <div class="control-group">
+                        <label class="control-label">🎨 剪辑风格</label>
+                        <div class="options-grid">
+                            <div class="option-btn active" data-style="dynamic">动感</div>
+                            <div class="option-btn" data-style="calm">平静</div>
+                            <div class="option-btn" data-style="energetic">活力</div>
+                        </div>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label class="control-label">⚙️ 智能选项</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="remove-silence" checked>
+                                <span>移除静音片段</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="detect-highlights" checked>
+                                <span>检测高光片段</span>
+                            </label>
+                            <label class="checkbox-item">
+                                <input type="checkbox" id="auto-transitions" checked>
+                                <span>自动添加转场</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 操作按钮 -->
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="btn-smart-cut">
+                        <span>✂️</span> 智能切片
+                    </button>
+                    <button class="btn btn-primary" id="btn-auto-edit">
+                        <span>🎬</span> 自动剪辑
+                    </button>
+                    <button class="btn btn-secondary" id="btn-reset">
+                        <span>🔄</span> 重新上传
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 进度面板 -->
+            <div class="progress-panel" id="progress-panel">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-text" id="progress-text">准备中...</div>
+            </div>
+            
+            <!-- 片段列表 -->
+            <div class="segments-panel" id="segments-panel">
+                <h3>📋 检测到的片段</h3>
+                <div class="segments-list" id="segments-list"></div>
+            </div>
+            
+            <!-- 下载面板 -->
+            <div class="download-panel" id="download-panel">
+                <h2>🎉 剪辑完成！</h2>
+                <p>您的视频已经准备好下载</p>
+                <a href="#" class="download-btn" id="download-link" download>
+                    ⬇️ 下载视频
+                </a>
+            </div>
+        </div>
+        
+        <footer>
+            <p>FreeAutoClip © 2024 - 自动化视频剪辑解决方案</p>
+        </footer>
+    </div>
+    
+    <script>
+        // 全局变量
+        let currentFile = null;
+        let currentTaskId = null;
+        let selectedStyle = 'dynamic';
+        
+        // DOM 元素
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const videoPreview = document.getElementById('video-preview');
+        const progressPanel = document.getElementById('progress-panel');
+        const segmentsPanel = document.getElementById('segments-panel');
+        const downloadPanel = document.getElementById('download-panel');
+        
+        // 上传区域事件
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // 处理文件
+        async function handleFile(file) {
+            if (!file.type.startsWith('video/')) {
+                alert('请上传视频文件');
+                return;
+            }
+            
+            currentFile = file;
+            
+            // 显示预览
+            uploadArea.style.display = 'none';
+            videoPreview.classList.add('active');
+            
+            // 显示基本信息
+            document.getElementById('video-filename').textContent = file.name;
+            
+            // 上传文件
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentFile.filepath = data.filepath;
+                    // 分析视频
+                    analyzeVideo(data.filepath);
+                } else {
+                    alert('上传失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('上传出错: ' + error.message);
+            }
+        }
+        
+        // 分析视频
+        async function analyzeVideo(filepath) {
+            try {
+                const response = await fetch('/api/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({video_path: filepath})
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const info = data.info;
+                    document.getElementById('video-duration').textContent = 
+                        formatTime(info.duration);
+                    document.getElementById('video-resolution').textContent = 
+                        `${info.size[0]} x ${info.size[1]}`;
+                    document.getElementById('video-fps').textContent = 
+                        `${info.fps} fps`;
+                }
+            } catch (error) {
+                console.error('分析失败:', error);
+            }
+        }
+        
+        // 格式化时间
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // 风格选择
+        document.querySelectorAll('.option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedStyle = btn.dataset.style;
+            });
+        });
+        
+        // 智能切片按钮
+        document.getElementById('btn-smart-cut').addEventListener('click', async () => {
+            if (!currentFile || !currentFile.filepath) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            const removeSilence = document.getElementById('remove-silence').checked;
+            const detectHighlights = document.getElementById('detect-highlights').checked;
+            
+            progressPanel.classList.add('active');
+            segmentsPanel.classList.remove('active');
+            
+            try {
+                const response = await fetch('/api/smart-cut', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_path: currentFile.filepath,
+                        remove_silence: removeSilence,
+                        detect_highlights: detectHighlights
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    pollTaskStatus(data.task_id, 'smart-cut');
+                } else {
+                    alert('启动失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('请求出错: ' + error.message);
+            }
+        });
+        
+        // 自动剪辑按钮
+        document.getElementById('btn-auto-edit').addEventListener('click', async () => {
+            if (!currentFile || !currentFile.filepath) {
+                alert('请先上传视频');
+                return;
+            }
+            
+            progressPanel.classList.add('active');
+            downloadPanel.classList.remove('active');
+            
+            try {
+                const response = await fetch('/api/auto-edit', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        video_path: currentFile.filepath,
+                        style: selectedStyle
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    pollTaskStatus(data.task_id, 'auto-edit');
+                } else {
+                    alert('启动失败: ' + data.error);
+                }
+            } catch (error) {
+                alert('请求出错: ' + error.message);
+            }
+        });
+        
+        // 轮询任务状态
+        async function pollTaskStatus(taskId, type) {
+            const interval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/task/${taskId}`);
+                    const data = await response.json();
+                    
+                    // 更新进度
+                    if (data.progress !== undefined) {
+                        document.getElementById('progress-fill').style.width = data.progress + '%';
+                    }
+                    if (data.message) {
+                        document.getElementById('progress-text').textContent = data.message;
+                    }
+                    
+                    // 检查完成状态
+                    if (data.status === 'completed') {
+                        clearInterval(interval);
+                        progressPanel.classList.remove('active');
+                        
+                        if (type === 'smart-cut') {
+                            showSegments(data.segments);
+                        } else if (type === 'auto-edit') {
+                            showDownload(data.output_url);
+                        }
+                    } else if (data.status === 'error') {
+                        clearInterval(interval);
+                        alert('处理失败: ' + data.message);
+                        progressPanel.classList.remove('active');
+                    }
+                } catch (error) {
+                    console.error('获取状态失败:', error);
+                }
+            }, 1000);
+        }
+        
+        // 显示片段列表
+        function showSegments(segments) {
+            const list = document.getElementById('segments-list');
+            list.innerHTML = '';
+            
+            segments.forEach(seg => {
+                const item = document.createElement('div');
+                item.className = 'segment-item';
+                item.innerHTML = `
+                    <div class="segment-info">
+                        <span>片段 ${seg.index + 1}</span>
+                        <span>${formatTime(seg.start)} - ${formatTime(seg.end)}</span>
+                        <span>时长: ${formatTime(seg.duration)}</span>
+                    </div>
+                    <span class="segment-type ${seg.type}">${seg.type}</span>
+                `;
+                list.appendChild(item);
+            });
+            
+            segmentsPanel.classList.add('active');
+        }
+        
+        // 显示下载
+        function showDownload(url) {
+            document.getElementById('download-link').href = url;
+            downloadPanel.classList.add('active');
+        }
+        
+        // 重置按钮
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            location.reload();
+        });
+    </script>
+</body>
+</html>

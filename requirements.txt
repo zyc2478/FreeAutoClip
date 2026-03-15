@@ -4,3 +4,24 @@ pydub==0.25.1
 Werkzeug==2.0.1
 jieba==0.42.1
 pypinyin==0.44.0
+
+# 视频处理
+moviepy==1.0.3
+opencv-python==4.8.1.78
+Pillow==10.1.0
+
+# 音频处理
+numpy>=1.26.0
+
+# 场景检测
+scenedetect==0.6.2
+
+# HTTP 请求
+requests==2.31.0
+
+# 其他工具
+tqdm==4.66.1
+imageio==2.31.1
+imageio-ffmpeg==0.4.9
+proglog==0.1.10
+decorator==4.4.2
